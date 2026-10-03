@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "patchhunter"
+version = "0.1.0"
+description = "Deterministic audio synthesis patch search for match-to-target waveform reconstruction"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+
+[tool.setuptools]
+packages = ["patchhunter", "patchhunter.core", "patchhunter.sources", "patchhunter.boxes", "patchhunter.render", "patchhunter.metrics", "patchhunter.search"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

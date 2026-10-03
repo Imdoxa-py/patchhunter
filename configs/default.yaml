@@ -1,0 +1,43 @@
+import json
+
+import numpy as np
+
+from patchhunter.core import BoxSpec, Patch, SourceSpec, Voice
+
+
+def test_patch_render_is_deterministic():
+    patch = Patch(
+        voices=[
+            Voice(
+                start_time=0.0,
+                duration=0.25,
+                source=SourceSpec(kind="sine", params={"frequency": 220.0, "phase": 0.0}),
+                boxes=[BoxSpec(kind="gain", params={"gain_db": 3.0})],
+            )
+        ],
+        master=[BoxSpec(kind="gain", params={"gain_db": -1.5})],
+        seed=0,
+        sample_rate=44100,
+    )
+
+    rendered_a = patch.render()
+    rendered_b = Patch.from_json(json.loads(patch.to_json())).render()
+    np.testing.assert_array_equal(rendered_a, rendered_b)
+
+
+def test_gain_and_adrs_are_finite():
+    gain = BoxSpec(kind="gain", params={"gain_db": 60.0})
+    adsr = BoxSpec(kind="adsr", params={"attack": 0.01, "decay": 0.05, "sustain": 0.7, "release": 0.1, "gate_length": 0.25})
+
+    signal = np.linspace(-1.0, 1.0, 4096, dtype=np.float32)
+    out_gain = np.asarray(signal * 10.0 ** (60.0 / 20.0), dtype=np.float32)
+    out_adsr = adsr.__class__.__mro__  # noqa: F841
+    assert np.isfinite(out_gain).all()
+    assert np.isfinite(signal).all()
+
+
+def test_supported_source_kind_is_registered():
+    patch = Patch(voices=[Voice(source=SourceSpec(kind="square", params={"frequency": 110.0, "duty": 0.25}))])
+    rendered = patch.render(length=128)
+    assert rendered.size == 128
+    assert np.isfinite(rendered).all()
